@@ -2,7 +2,7 @@
 Open Asset Import Library (assimp)
 ----------------------------------------------------------------------
 
-Copyright (c) 2006-2020, assimp team
+Copyright (c) 2006-2019, assimp team
 
 
 All rights reserved.
@@ -49,8 +49,8 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include "types.h"
 
-#ifdef __GNUC__
-#   pragma GCC system_header
+#ifdef __cplusplus
+extern "C" {
 #endif
 
 // -----------------------------------------------------------------------------------
@@ -316,19 +316,6 @@ enum aiPostProcessSteps
     */
     aiProcess_FixInfacingNormals = 0x2000,
 
-
-
-    // -------------------------------------------------------------------------
-    /**
-     * This step generically populates aiBone->mArmature and aiBone->mNode generically
-     * The point of these is it saves you later having to calculate these elements
-     * This is useful when handling rest information or skin information
-     * If you have multiple armatures on your models we strongly recommend enabling this
-     * Instead of writing your own multi-root, multi-armature lookups we have done the
-     * hard work for you :)
-   */
-    aiProcess_PopulateArmatureData = 0x4000,
-
     // -------------------------------------------------------------------------
     /** <hr>This step splits meshes with more than one primitive type in
      *  homogeneous sub-meshes.
@@ -546,8 +533,6 @@ enum aiPostProcessSteps
     */
     aiProcess_Debone  = 0x4000000,
 
-
-
     // -------------------------------------------------------------------------
     /** <hr>This step will perform a global scale of the model.
     *
@@ -570,7 +555,7 @@ enum aiPostProcessSteps
      *  of the imported model. And if so, it uses that.
      */
     aiProcess_EmbedTextures  = 0x10000000,
-
+        
     // aiProcess_GenEntityMeshes = 0x100000,
     // aiProcess_OptimizeAnimations = 0x200000
     // aiProcess_FixTexturePaths = 0x200000
@@ -690,5 +675,10 @@ enum aiPostProcessSteps
     aiProcess_ValidateDataStructure          |  \
     aiProcess_OptimizeMeshes                 |  \
     0 )
+
+
+#ifdef __cplusplus
+} // end of extern "C"
+#endif
 
 #endif // AI_POSTPROCESS_H_INC

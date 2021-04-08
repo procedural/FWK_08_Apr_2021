@@ -3,7 +3,7 @@
 Open Asset Import Library (assimp)
 ---------------------------------------------------------------------------
 
-Copyright (c) 2006-2020, assimp team
+Copyright (c) 2006-2019, assimp team
 
 
 
@@ -49,11 +49,11 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #ifndef AI_LIGHT_H_INC
 #define AI_LIGHT_H_INC
 
-#ifdef __GNUC__
-#   pragma GCC system_header
-#endif
-
 #include "types.h"
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 // ---------------------------------------------------------------------------
 /** Enumerates all supported types of light sources.
@@ -235,6 +235,25 @@ struct aiLight
     /** Size of area light source. */
     C_STRUCT aiVector2D mSize;
 
+#ifdef __cplusplus
+
+    aiLight() AI_NO_EXCEPT
+        :   mType                 (aiLightSource_UNDEFINED)
+        ,   mAttenuationConstant  (0.f)
+        ,   mAttenuationLinear    (1.f)
+        ,   mAttenuationQuadratic (0.f)
+        ,   mAngleInnerCone       ((float)AI_MATH_TWO_PI)
+        ,   mAngleOuterCone       ((float)AI_MATH_TWO_PI)
+        ,   mSize                 (0.f, 0.f)
+    {
+    }
+
+#endif
 };
+
+#ifdef __cplusplus
+}
+#endif 
+
 
 #endif // !! AI_LIGHT_H_INC

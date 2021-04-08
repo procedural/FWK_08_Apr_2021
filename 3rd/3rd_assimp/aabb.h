@@ -3,7 +3,9 @@
 Open Asset Import Library (assimp)
 ---------------------------------------------------------------------------
 
-Copyright (c) 2006-2020, assimp team
+Copyright (c) 2006-2019, assimp team
+
+
 
 All rights reserved.
 
@@ -43,17 +45,32 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #ifndef AI_AABB_H_INC
 #define AI_AABB_H_INC
 
-#ifdef __GNUC__
-#   pragma GCC system_header
-#endif
-
-#include "vector3.h"
+#include <assimp/vector3.h>
 
 struct aiAABB {
     C_STRUCT aiVector3D mMin;
     C_STRUCT aiVector3D mMax;
 
+#ifdef __cplusplus
+
+    aiAABB()
+    : mMin()
+    , mMax() {
+        // empty
+    }
+
+    aiAABB(const aiVector3D &min, const aiVector3D &max )
+    : mMin(min)
+    , mMax(max) {
+        // empty
+    }
+
+    ~aiAABB() {
+        // empty
+    }
+
+#endif 
 };
 
 
-#endif // AI_AABB_H_INC
+#endif

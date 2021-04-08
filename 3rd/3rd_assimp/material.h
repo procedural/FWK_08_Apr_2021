@@ -3,7 +3,7 @@
 Open Asset Import Library (assimp)
 ---------------------------------------------------------------------------
 
-Copyright (c) 2006-2020, assimp team
+Copyright (c) 2006-2019, assimp team
 
 
 
@@ -48,11 +48,11 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #ifndef AI_MATERIAL_H_INC
 #define AI_MATERIAL_H_INC
 
-#ifdef __GNUC__
-#   pragma GCC system_header
-#endif
-
 #include "types.h"
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 // Name for default materials (2nd is used if meshes have UV coords)
 #define AI_DEFAULT_MATERIAL_NAME          "DefaultMaterial"
@@ -198,8 +198,8 @@ enum aiTextureType
      */
     aiTextureType_NONE = 0,
 
-    /** LEGACY API MATERIALS
-     * Legacy refers to materials which
+    /** LEGACY API MATERIALS 
+     * Legacy refers to materials which 
      * Were originally implemented in the specifications around 2000.
      * These must never be removed, as most engines support them.
      */
@@ -307,10 +307,6 @@ enum aiTextureType
 };
 
 #define AI_TEXTURE_TYPE_MAX  aiTextureType_UNKNOWN
-
-// -------------------------------------------------------------------------------
-// Get a string for a given aiTextureType
-ASSIMP_API const char* TextureTypeToString(enum aiTextureType in);
 
 // ---------------------------------------------------------------------------
 /** @brief Defines all shading models supported by the library
@@ -504,6 +500,16 @@ struct aiUVTransform
     ai_real mRotation;
 
 
+#ifdef __cplusplus
+    aiUVTransform() AI_NO_EXCEPT
+        :   mTranslation (0.0,0.0)
+        ,   mScaling    (1.0,1.0)
+        ,   mRotation   (0.0)
+    {
+        // nothing to be done here ...
+    }
+#endif
+
 };
 
 #include "./Compiler/poppack1.h"
@@ -617,9 +623,29 @@ struct aiMaterialProperty
      */
     char* mData;
 
+#ifdef __cplusplus
+
+    aiMaterialProperty() AI_NO_EXCEPT
+    : mSemantic( 0 )
+    , mIndex( 0 )
+    , mDataLength( 0 )
+    , mType( aiPTI_Float )
+    , mData(nullptr) {
+        // empty
+    }
+
+    ~aiMaterialProperty()   {
+        delete[] mData;
+        mData = nullptr;
+    }
+
+#endif
 };
 //! @endcond
 
+#ifdef __cplusplus
+} // We need to leave the "C" block here to allow template member functions
+#endif
 
 // ---------------------------------------------------------------------------
 /** @brief Data structure for a material
@@ -630,8 +656,247 @@ struct aiMaterialProperty
 *  have to stick with the aiMaterialGetXXX family of unbound functions.
 *  The library defines a set of standard keys (AI_MATKEY_XXX).
 */
+#ifdef __cplusplus
+struct ASSIMP_API aiMaterial
+#else
 struct aiMaterial
+#endif
 {
+
+#ifdef __cplusplus
+
+public:
+
+    aiMaterial();
+    ~aiMaterial();
+
+    // -------------------------------------------------------------------
+    /**
+      * @brief  Returns the name of the material.
+      * @return The name of the material.
+      */
+    // -------------------------------------------------------------------
+    aiString GetName();
+
+    // -------------------------------------------------------------------
+    /** @brief Retrieve an array of Type values with a specific key
+     *  from the material
+     *
+     * @param pKey Key to search for. One of the AI_MATKEY_XXX constants.
+     * @param type .. set by AI_MATKEY_XXX
+     * @param idx .. set by AI_MATKEY_XXX
+     * @param pOut Pointer to a buffer to receive the result.
+     * @param pMax Specifies the size of the given buffer, in Type's.
+     * Receives the number of values (not bytes!) read.
+     * NULL is a valid value for this parameter.
+     */
+    template <typename Type>
+    aiReturn Get(const char* pKey,unsigned int type,
+        unsigned int idx, Type* pOut, unsigned int* pMax) const;
+
+    aiReturn Get(const char* pKey,unsigned int type,
+        unsigned int idx, int* pOut, unsigned int* pMax) const;
+
+    aiReturn Get(const char* pKey,unsigned int type,
+        unsigned int idx, ai_real* pOut, unsigned int* pMax) const;
+
+    // -------------------------------------------------------------------
+    /** @brief Retrieve a Type value with a specific key
+     *  from the material
+     *
+     * @param pKey Key to search for. One of the AI_MATKEY_XXX constants.
+    * @param type Specifies the type of the texture to be retrieved (
+    *    e.g. diffuse, specular, height map ...)
+    * @param idx Index of the texture to be retrieved.
+     * @param pOut Reference to receive the output value
+     */
+    template <typename Type>
+    aiReturn Get(const char* pKey,unsigned int type,
+        unsigned int idx,Type& pOut) const;
+
+
+    aiReturn Get(const char* pKey,unsigned int type,
+        unsigned int idx, int& pOut) const;
+
+    aiReturn Get(const char* pKey,unsigned int type,
+        unsigned int idx, ai_real& pOut) const;
+
+    aiReturn Get(const char* pKey,unsigned int type,
+        unsigned int idx, aiString& pOut) const;
+
+    aiReturn Get(const char* pKey,unsigned int type,
+        unsigned int idx, aiColor3D& pOut) const;
+
+    aiReturn Get(const char* pKey,unsigned int type,
+        unsigned int idx, aiColor4D& pOut) const;
+
+    aiReturn Get(const char* pKey,unsigned int type,
+        unsigned int idx, aiUVTransform& pOut) const;
+
+    // -------------------------------------------------------------------
+    /** Get the number of textures for a particular texture type.
+     *  @param type Texture type to check for
+     *  @return Number of textures for this type.
+     *  @note A texture can be easily queried using #GetTexture() */
+    unsigned int GetTextureCount(aiTextureType type) const;
+
+    // -------------------------------------------------------------------
+    /** Helper function to get all parameters pertaining to a
+     *  particular texture slot from a material.
+     *
+     *  This function is provided just for convenience, you could also
+     *  read the single material properties manually.
+     *  @param type Specifies the type of the texture to be retrieved (
+     *    e.g. diffuse, specular, height map ...)
+     *  @param index Index of the texture to be retrieved. The function fails
+     *    if there is no texture of that type with this index.
+     *    #GetTextureCount() can be used to determine the number of textures
+     *    per texture type.
+     *  @param path Receives the path to the texture.
+     *    If the texture is embedded, receives a '*' followed by the id of
+     *    the texture (for the textures stored in the corresponding scene) which
+     *    can be converted to an int using a function like atoi.
+     *    NULL is a valid value.
+     *  @param mapping The texture mapping.
+     *    NULL is allowed as value.
+     *  @param uvindex Receives the UV index of the texture.
+     *    NULL is a valid value.
+     *  @param blend Receives the blend factor for the texture
+     *    NULL is a valid value.
+     *  @param op Receives the texture operation to be performed between
+     *    this texture and the previous texture. NULL is allowed as value.
+     *  @param mapmode Receives the mapping modes to be used for the texture.
+     *    The parameter may be NULL but if it is a valid pointer it MUST
+     *    point to an array of 3 aiTextureMapMode's (one for each
+     *    axis: UVW order (=XYZ)).
+     */
+    // -------------------------------------------------------------------
+    aiReturn GetTexture(aiTextureType type,
+        unsigned int  index,
+        C_STRUCT aiString* path,
+        aiTextureMapping* mapping   = NULL,
+        unsigned int* uvindex       = NULL,
+        ai_real* blend              = NULL,
+        aiTextureOp* op             = NULL,
+        aiTextureMapMode* mapmode   = NULL) const;
+
+
+    // Setters
+
+
+    // ------------------------------------------------------------------------------
+    /** @brief Add a property with a given key and type info to the material
+     *  structure
+     *
+     *  @param pInput Pointer to input data
+     *  @param pSizeInBytes Size of input data
+     *  @param pKey Key/Usage of the property (AI_MATKEY_XXX)
+     *  @param type Set by the AI_MATKEY_XXX macro
+     *  @param index Set by the AI_MATKEY_XXX macro
+     *  @param pType Type information hint */
+    aiReturn AddBinaryProperty (const void* pInput,
+        unsigned int pSizeInBytes,
+        const char* pKey,
+        unsigned int type ,
+        unsigned int index ,
+        aiPropertyTypeInfo pType);
+
+    // ------------------------------------------------------------------------------
+    /** @brief Add a string property with a given key and type info to the
+     *  material structure
+     *
+     *  @param pInput Input string
+     *  @param pKey Key/Usage of the property (AI_MATKEY_XXX)
+     *  @param type Set by the AI_MATKEY_XXX macro
+     *  @param index Set by the AI_MATKEY_XXX macro */
+    aiReturn AddProperty (const aiString* pInput,
+        const char* pKey,
+        unsigned int type  = 0,
+        unsigned int index = 0);
+
+    // ------------------------------------------------------------------------------
+    /** @brief Add a property with a given key to the material structure
+     *  @param pInput Pointer to the input data
+     *  @param pNumValues Number of values in the array
+     *  @param pKey Key/Usage of the property (AI_MATKEY_XXX)
+     *  @param type Set by the AI_MATKEY_XXX macro
+     *  @param index Set by the AI_MATKEY_XXX macro  */
+    template<class TYPE>
+    aiReturn AddProperty (const TYPE* pInput,
+        unsigned int pNumValues,
+        const char* pKey,
+        unsigned int type  = 0,
+        unsigned int index = 0);
+
+    aiReturn AddProperty (const aiVector3D* pInput,
+        unsigned int pNumValues,
+        const char* pKey,
+        unsigned int type  = 0,
+        unsigned int index = 0);
+
+    aiReturn AddProperty (const aiColor3D* pInput,
+        unsigned int pNumValues,
+        const char* pKey,
+        unsigned int type  = 0,
+        unsigned int index = 0);
+
+    aiReturn AddProperty (const aiColor4D* pInput,
+        unsigned int pNumValues,
+        const char* pKey,
+        unsigned int type  = 0,
+        unsigned int index = 0);
+
+    aiReturn AddProperty (const int* pInput,
+        unsigned int pNumValues,
+        const char* pKey,
+        unsigned int type  = 0,
+        unsigned int index = 0);
+
+    aiReturn AddProperty (const float* pInput,
+        unsigned int pNumValues,
+        const char* pKey,
+        unsigned int type  = 0,
+        unsigned int index = 0);
+
+    aiReturn AddProperty (const double* pInput,
+        unsigned int pNumValues,
+        const char* pKey,
+        unsigned int type  = 0,
+        unsigned int index = 0);
+
+    aiReturn AddProperty (const aiUVTransform* pInput,
+        unsigned int pNumValues,
+        const char* pKey,
+        unsigned int type  = 0,
+        unsigned int index = 0);
+
+    // ------------------------------------------------------------------------------
+    /** @brief Remove a given key from the list.
+     *
+     *  The function fails if the key isn't found
+     *  @param pKey Key to be deleted
+     *  @param type Set by the AI_MATKEY_XXX macro
+     *  @param index Set by the AI_MATKEY_XXX macro  */
+    aiReturn RemoveProperty (const char* pKey,
+        unsigned int type  = 0,
+        unsigned int index = 0);
+
+    // ------------------------------------------------------------------------------
+    /** @brief Removes all properties from the material.
+     *
+     *  The data array remains allocated so adding new properties is quite fast.  */
+    void Clear();
+
+    // ------------------------------------------------------------------------------
+    /** Copy the property list of a material
+     *  @param pcDest Destination material
+     *  @param pcSrc Source material
+     */
+    static void CopyPropertyList(aiMaterial* pcDest,
+        const aiMaterial* pcSrc);
+
+
+#endif
 
     /** List of all material properties loaded. */
     C_STRUCT aiMaterialProperty** mProperties;
@@ -644,6 +909,9 @@ struct aiMaterial
 };
 
 // Go back to extern "C" again
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 // ---------------------------------------------------------------------------
 #define AI_MATKEY_NAME "?mat.name",0,0
@@ -1139,9 +1407,43 @@ ASSIMP_API C_ENUM aiReturn aiGetMaterialFloatArray(
     unsigned int* pMax);
 
 
+#ifdef __cplusplus
+
+// ---------------------------------------------------------------------------
+/** @brief Retrieve a single float property with a specific key from the material.
+*
+* Pass one of the AI_MATKEY_XXX constants for the last three parameters (the
+* example reads the #AI_MATKEY_SHININESS_STRENGTH property of the first diffuse texture)
+* @code
+* float specStrength = 1.f; // default value, remains unmodified if we fail.
+* aiGetMaterialFloat(mat, AI_MATKEY_SHININESS_STRENGTH,
+*    (float*)&specStrength);
+* @endcode
+*
+* @param pMat Pointer to the input material. May not be NULL
+* @param pKey Key to search for. One of the AI_MATKEY_XXX constants.
+* @param pOut Receives the output float.
+* @param type (see the code sample above)
+* @param index (see the code sample above)
+* @return Specifies whether the key has been found. If not, the output
+*   float remains unmodified.*/
+// ---------------------------------------------------------------------------
+inline aiReturn aiGetMaterialFloat(const aiMaterial* pMat,
+    const char* pKey,
+    unsigned int type,
+    unsigned int index,
+    ai_real* pOut)
+{
+    return aiGetMaterialFloatArray(pMat,pKey,type,index,pOut,(unsigned int*)0x0);
+}
+
+#else
+
 // Use our friend, the C preprocessor
 #define aiGetMaterialFloat (pMat, type, index, pKey, pOut) \
     aiGetMaterialFloatArray(pMat, type, index, pKey, pOut, NULL)
+
+#endif //!__cplusplus
 
 
 // ---------------------------------------------------------------------------
@@ -1157,10 +1459,29 @@ ASSIMP_API C_ENUM aiReturn aiGetMaterialIntegerArray(const C_STRUCT aiMaterial* 
      unsigned int* pMax);
 
 
+#ifdef __cplusplus
+
+// ---------------------------------------------------------------------------
+/** @brief Retrieve an integer property with a specific key from a material
+ *
+ * See the sample for aiGetMaterialFloat for more information.*/
+// ---------------------------------------------------------------------------
+inline aiReturn aiGetMaterialInteger(const C_STRUCT aiMaterial* pMat,
+    const char* pKey,
+    unsigned int type,
+    unsigned int index,
+    int* pOut)
+{
+    return aiGetMaterialIntegerArray(pMat,pKey,type,index,pOut,(unsigned int*)0x0);
+}
+
+#else
 
 // use our friend, the C preprocessor
 #define aiGetMaterialInteger (pMat, type, index, pKey, pOut) \
     aiGetMaterialIntegerArray(pMat, type, index, pKey, pOut, NULL)
+
+#endif //!__cplusplus
 
 // ---------------------------------------------------------------------------
 /** @brief Retrieve a color value from the material property table
@@ -1244,6 +1565,18 @@ ASSIMP_API unsigned int aiGetMaterialTextureCount(const C_STRUCT aiMaterial* pMa
  *  @param[out] flags Receives the the texture flags.
  *  @return AI_SUCCESS on success, otherwise something else. Have fun.*/
 // ---------------------------------------------------------------------------
+#ifdef __cplusplus
+ASSIMP_API aiReturn aiGetMaterialTexture(const C_STRUCT aiMaterial* mat,
+    aiTextureType type,
+    unsigned int  index,
+    aiString* path,
+    aiTextureMapping* mapping   = NULL,
+    unsigned int* uvindex       = NULL,
+    ai_real* blend              = NULL,
+    aiTextureOp* op             = NULL,
+    aiTextureMapMode* mapmode   = NULL,
+    unsigned int* flags         = NULL);
+#else
 C_ENUM aiReturn aiGetMaterialTexture(const C_STRUCT aiMaterial* mat,
     C_ENUM aiTextureType type,
     unsigned int  index,
@@ -1254,5 +1587,14 @@ C_ENUM aiReturn aiGetMaterialTexture(const C_STRUCT aiMaterial* mat,
     C_ENUM aiTextureOp* op              /*= NULL*/,
     C_ENUM aiTextureMapMode* mapmode    /*= NULL*/,
     unsigned int* flags                 /*= NULL*/);
+#endif // !#ifdef __cplusplus
+
+
+#ifdef __cplusplus
+}
+
+#include "material.inl"
+
+#endif //!__cplusplus
 
 #endif //!!AI_MATERIAL_H_INC
