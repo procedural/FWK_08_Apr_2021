@@ -1261,9 +1261,7 @@ flags |= (doflipUV ? aiProcess_FlipUVs : 0);
         | aiProcess_OptimizeMeshes // aiProcess_SplitLargeMeshes
         | (doflipUV ? aiProcess_FlipUVs : 0)
         | aiProcess_OptimizeGraph
-#ifndef __linux__
-        //| aiProcess_PopulateArmatureData // (not found in current Linux pkg)
-#endif
+        | aiProcess_PopulateArmatureData
         //| aiProcess_FlipWindingOrder
         //| aiProcess_GenBoundingBoxes
         | aiProcess_GlobalScale // AI_CONFIG_GLOBAL_SCALE_FACTOR_KEY
