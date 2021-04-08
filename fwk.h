@@ -255,7 +255,7 @@ static char *tmpnam(char *x) {
 // ----------------------------------------------------------------------------
 // compat (string.h)
 
-#define strstri       strcasestr
+//#define strstri       strcasestr
 #define strcmpi       strcasecmp
 #ifdef _MSC_VER
 #define strcasecmp    _stricmp
@@ -315,7 +315,6 @@ bool strendi(const char *src, const char *sub) { // returns true if both strings
 }
 
 
-#ifdef _MSC_VER
 // Find substring in string, case insensitive. Alias for strcasestr()
 // Returns first char of coincidence, or NULL.
 static const char *strstri( const char *str, const char *find ){
@@ -344,7 +343,6 @@ static size_t strlcpy(char *dst, const char *src, size_t dstcap) {
     if( dstcap ) snprintf(dst, dstcap, "%*s", sl, src);
     return sl;// count does not include NUL
 }
-#endif
 
 static char *strswap( char *copy, const char *target, const char *replacement ) {
     // replaced only if new text is shorter than old one
