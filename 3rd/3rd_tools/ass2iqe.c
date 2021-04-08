@@ -1262,7 +1262,7 @@ flags |= (doflipUV ? aiProcess_FlipUVs : 0);
         | (doflipUV ? aiProcess_FlipUVs : 0)
         | aiProcess_OptimizeGraph
 #ifndef __linux__
-        | aiProcess_PopulateArmatureData // (not found in current Linux pkg)
+        //| aiProcess_PopulateArmatureData // (not found in current Linux pkg)
 #endif
         //| aiProcess_FlipWindingOrder
         //| aiProcess_GenBoundingBoxes

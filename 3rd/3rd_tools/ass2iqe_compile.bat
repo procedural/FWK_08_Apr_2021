@@ -1,0 +1,1 @@
+cl ass2iqe.c /I. /I../.. /link /LIBPATH:../..
